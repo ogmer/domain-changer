@@ -1,0 +1,89 @@
+# OS固有ファイル
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# 一時ファイル・バックアップ
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~
+
+# バイナリ・コンパイル成果物
+*.exe
+*.dll
+*.so
+*.dylib
+*.out
+*.o
+*.obj
+*.class
+*.pyc
+*.pyo
+*.pyd
+*.jar
+*.war
+*.zip
+*.tar.gz
+*.7z
+
+# IDE/エディタ
+.vscode/
+.idea/
+*.iml
+*.sublime-workspace
+*.sublime-project
+*.code-workspace
+
+# Gitの一時ファイル
+*.orig
+
+# キャッシュ・ビルドディレクトリ
+/build
+/tmp
+/cache
+/__pycache__/
+/node_modules/
+/target/
+/out/
+/coverage
+/.next/
+/.next/
+/.nyc_output
+/.parcel-cache
+/.turbo
+
+# 環境・設定ファイル（公開すべきでない）
+.env
+.env.*
+*.secret
+*.key
+*.pem
+
+# テスト結果やレポート
+/coverage/
+/test-output/
+/junit-report.xml
+
+# OS仮想環境/依存関係ファイル
+.venv/
+env/
+venv/
+.Python
+
+# Docker関連
+*.pid
+*.pid.lock
+docker-compose.override.yml
+
+# その他CI/CDや外部ツールが生成する一時ファイル
+*.log
+*.lock
+yarn-error.log
+npm-debug.log
+pnpm-debug.log
