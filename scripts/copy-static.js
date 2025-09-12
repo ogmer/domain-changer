@@ -95,4 +95,22 @@ if (fs.existsSync(iconsSrc)) {
   }
 }
 
+// copy _locales folder if exists
+const localesSrc = path.join(root, "_locales");
+const localesDest = path.join(dist, "_locales");
+if (fs.existsSync(localesSrc)) {
+  const locales = fs.readdirSync(localesSrc);
+  for (const locale of locales) {
+    const localeSrc = path.join(localesSrc, locale);
+    const localeDest = path.join(localesDest, locale);
+    if (fs.statSync(localeSrc).isDirectory()) {
+      fs.mkdirSync(localeDest, { recursive: true });
+      const files = fs.readdirSync(localeSrc);
+      for (const f of files) {
+        copyFile(path.join(localeSrc, f), path.join(localeDest, f));
+      }
+    }
+  }
+}
+
 console.log("copy-static complete");

@@ -1,0 +1,10 @@
+{
+  "appName": {
+    "message": "ドメイン置換くん",
+    "description": "The name of the application"
+  },
+  "appDescription": {
+    "message": "ブックマークを読み込み、指定したドメインを任意のドメインに変更します。",
+    "description": "The description of the application"
+  }
+}

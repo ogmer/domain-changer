@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { useLanguage } from "./i18n/LanguageContext";
+import LanguageSwitcher from "./components/LanguageSwitcher";
 
 type BookmarkNode = chrome.bookmarks.BookmarkTreeNode;
 
 const App: React.FC = () => {
+  const { t } = useLanguage();
   const [bookmarks, setBookmarks] = useState<BookmarkNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [fromDomain, setFromDomain] = useState("");
@@ -33,7 +36,7 @@ const App: React.FC = () => {
       setPreview(list);
     } catch (e) {
       console.error(e);
-      alert("ブックマークの読み込みに失敗しました。");
+      alert(t.bookmarkLoadError);
     } finally {
       setLoading(false);
     }
@@ -65,10 +68,10 @@ const App: React.FC = () => {
 
   const applyReplace = async () => {
     if (!fromDomain || !toDomain) {
-      alert("置換元と置換先のドメインを入力してください。");
+      alert(t.domainRequired);
       return;
     }
-    if (!confirm("実際にブックマークを更新します。よろしいですか？")) return;
+    if (!confirm(t.confirmReplace)) return;
     setLoading(true);
     try {
       const from = fromDomain.replace(/^https?:\/\//, "").replace(/\/$/, "");
@@ -81,11 +84,11 @@ const App: React.FC = () => {
       );
       if (!response?.ok) throw new Error(response?.error || "unknown");
       const diffs = response.result || [];
-      alert(`置換が完了しました。変更件数: ${diffs.length}`);
+      alert(`${t.replaceComplete} ${t.changeCount}: ${diffs.length}`);
       await loadBookmarks();
     } catch (e) {
       console.error(e);
-      alert("置換中にエラーが発生しました。");
+      alert(t.replaceError);
     } finally {
       setLoading(false);
     }
@@ -119,19 +122,22 @@ const App: React.FC = () => {
 
   return (
     <div className="w-[520px] h-[560px] p-4 bg-white text-sm overflow-auto">
-      <h1 className="text-xl font-bold mb-3">ドメイン置換くん</h1>
+      <div className="flex justify-between items-center mb-3">
+        <h1 className="text-xl font-bold">{t.title}</h1>
+        <LanguageSwitcher />
+      </div>
 
       <div className="flex gap-2 mb-3 text-xs">
         <input
           value={fromDomain}
           onChange={(e) => setFromDomain(e.target.value)}
-          placeholder="置換元ドメイン（例: example.com）"
+          placeholder={t.fromDomainPlaceholder}
           className="flex-1 px-2 py-1 border rounded"
         />
         <input
           value={toDomain}
           onChange={(e) => setToDomain(e.target.value)}
-          placeholder="置換先ドメイン（例: example.net）"
+          placeholder={t.toDomainPlaceholder}
           className="flex-1 px-2 py-1 border rounded"
         />
       </div>
@@ -142,22 +148,22 @@ const App: React.FC = () => {
           className="flex-1 min-w-[160px] px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600"
           disabled={loading}
         >
-          ブックマーク読み込み
+          {t.loadBookmarks}
         </button>
         <button
           onClick={buildPreview}
           className="flex-1 min-w-[140px] px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
         >
-          プレビュー更新
+          {t.updatePreview}
         </button>
         <select
           value={mode}
           onChange={(e) => setMode(e.target.value as any)}
           className="min-w-[120px] px-2 py-2 border rounded"
         >
-          <option value="exact">exact</option>
-          <option value="wildcard">wildcard (*)</option>
-          <option value="regexp">regexp</option>
+          <option value="exact">{t.exact}</option>
+          <option value="wildcard">{t.wildcard}</option>
+          <option value="regexp">{t.regexp}</option>
         </select>
       </div>
 
@@ -167,24 +173,24 @@ const App: React.FC = () => {
           className="flex-1 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           disabled={loading}
         >
-          置換実行
+          {t.applyReplace}
         </button>
       </div>
 
       <div className="mb-3 flex items-center justify-between">
-        <div className="text-sm text-gray-700">プレビュー（置換後のURL）</div>
+        <div className="text-sm text-gray-700">{t.previewTitle}</div>
         <label className="text-sm flex items-center gap-2 select-none">
           <input
             type="checkbox"
             checked={onlyChanged}
             onChange={(e) => setOnlyChanged(e.target.checked)}
           />
-          <span>置換対象のみ表示</span>
+          <span>{t.showOnlyChanged}</span>
         </label>
       </div>
       <div className="border border-gray-200 p-3 rounded h-[320px] overflow-auto bg-gray-50">
         {preview.length === 0 ? (
-          <div className="text-gray-500">読み込まれていません</div>
+          <div className="text-gray-500">{t.notLoaded}</div>
         ) : (
           <ul className="list-decimal pl-5">
             {displayedPreview.map((b) => (
