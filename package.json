@@ -1,6 +1,6 @@
 {
   "name": "domain-changer",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "ブックマークを読み込み、指定したドメインを任意のドメインに変更します。",
   "scripts": {
     "dev": "vite",
@@ -27,3 +27,4 @@
     "vite": "^6.3.5"
   }
 }
+
