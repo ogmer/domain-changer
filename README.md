@@ -1,14 +1,3 @@
-# ドメイン置換くん
-
-ブックマークの指定ドメインを別のドメインに一括で置換するシンプルな Chrome 拡張機能です。React + TypeScript + TailwindCSS + Vite を使用しています。
-
-## 機能
-
-- TypeScript による型安全性
-- TailwindCSS によるスタイリング
-- Vite による高速な開発環境
-- React によるモダンな UI 開発
-
 ## Chrome 拡張機能としての読み込み方法
 
 1. Chrome ブラウザで `chrome://extensions/` を開く
@@ -43,4 +32,5 @@ chrome-extension-template/
     ├── App.tsx          # メインのAppコンポーネント
     └── index.css        # グローバルスタイル
 ```
+
 
