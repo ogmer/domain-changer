@@ -5,44 +5,7 @@ import { translations, Translations } from "./translations";
 const detectLanguageFromEnvironment = (): string => {
   console.log("[LanguageContext] Starting language detection...");
 
-  // 1. Chrome拡張機能の環境の場合、Chrome APIを使用
-  if (typeof chrome !== "undefined" && chrome.i18n) {
-    const chromeLang = chrome.i18n.getUILanguage();
-    const chromeLangCode = chromeLang.split("-")[0];
-    console.log(
-      `[LanguageContext] Chrome UI language: ${chromeLang} -> ${chromeLangCode}`
-    );
-    if (translations[chromeLangCode]) {
-      console.log(`[LanguageContext] Using Chrome language: ${chromeLangCode}`);
-      return chromeLangCode;
-    }
-  }
-
-  // 2. ブラウザの言語設定を確認
-  const browserLang = navigator.language.split("-")[0];
-  console.log(
-    `[LanguageContext] Browser language: ${navigator.language} -> ${browserLang}`
-  );
-  if (translations[browserLang]) {
-    console.log(`[LanguageContext] Using browser language: ${browserLang}`);
-    return browserLang;
-  }
-
-  // 3. ブラウザの言語がサポートされていない場合、navigator.languagesを確認
-  if (navigator.languages) {
-    console.log(
-      `[LanguageContext] Available languages: ${navigator.languages.join(", ")}`
-    );
-    for (const lang of navigator.languages) {
-      const langCode = lang.split("-")[0];
-      if (translations[langCode]) {
-        console.log(`[LanguageContext] Using available language: ${langCode}`);
-        return langCode;
-      }
-    }
-  }
-
-  // 4. タイムゾーンから推測（簡易的な地域検出）
+  // 1. タイムゾーンから推測（地域検出を優先）
   try {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     console.log(`[LanguageContext] Timezone: ${timezone}`);
@@ -56,6 +19,43 @@ const detectLanguageFromEnvironment = (): string => {
     }
   } catch (e) {
     console.log("[LanguageContext] Timezone detection failed:", e);
+  }
+
+  // 2. Chrome拡張機能の環境の場合、Chrome APIを使用
+  if (typeof chrome !== "undefined" && chrome.i18n) {
+    const chromeLang = chrome.i18n.getUILanguage();
+    const chromeLangCode = chromeLang.split("-")[0];
+    console.log(
+      `[LanguageContext] Chrome UI language: ${chromeLang} -> ${chromeLangCode}`
+    );
+    if (translations[chromeLangCode]) {
+      console.log(`[LanguageContext] Using Chrome language: ${chromeLangCode}`);
+      return chromeLangCode;
+    }
+  }
+
+  // 3. ブラウザの言語設定を確認
+  const browserLang = navigator.language.split("-")[0];
+  console.log(
+    `[LanguageContext] Browser language: ${navigator.language} -> ${browserLang}`
+  );
+  if (translations[browserLang]) {
+    console.log(`[LanguageContext] Using browser language: ${browserLang}`);
+    return browserLang;
+  }
+
+  // 4. ブラウザの言語がサポートされていない場合、navigator.languagesを確認
+  if (navigator.languages) {
+    console.log(
+      `[LanguageContext] Available languages: ${navigator.languages.join(", ")}`
+    );
+    for (const lang of navigator.languages) {
+      const langCode = lang.split("-")[0];
+      if (translations[langCode]) {
+        console.log(`[LanguageContext] Using available language: ${langCode}`);
+        return langCode;
+      }
+    }
   }
 
   // 5. デフォルトは日本語

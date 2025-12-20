@@ -1,9 +1,3 @@
-/* background.js
-   - receives messages from popup to perform replacement in background
-   - supports wildcard (simple '*' prefix/suffix) and regexp modes
-   - returns diffs and can trigger JSON download of diffs
-*/
-
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg?.type === "performReplace") {
     const { from, to, mode } = msg;
@@ -74,3 +68,4 @@ function buildMatcher(from, mode) {
   // exact
   return (host) => host === from;
 }
+

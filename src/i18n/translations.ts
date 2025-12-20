@@ -18,6 +18,7 @@ export interface Translations {
   exact: string;
   wildcard: string;
   regexp: string;
+  language: string;
 }
 
 export const translations: Record<string, Translations> = {
@@ -42,6 +43,7 @@ export const translations: Record<string, Translations> = {
     exact: "exact",
     wildcard: "wildcard (*)",
     regexp: "regexp",
+    language: "言語: ",
   },
   en: {
     title: "Domain Replacer",
@@ -63,5 +65,6 @@ export const translations: Record<string, Translations> = {
     exact: "exact",
     wildcard: "wildcard (*)",
     regexp: "regexp",
+    language: "Language: ",
   },
 };
