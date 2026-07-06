@@ -52,8 +52,6 @@ $RECYCLE.BIN/
 /target/
 /out/
 /coverage
-/.next/
-/.next/
 /.nyc_output
 /.parcel-cache
 /.turbo

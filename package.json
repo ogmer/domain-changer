@@ -1,6 +1,6 @@
 {
   "name": "Domain Changer - ドメイン置換くん",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "ブックマークを読み込み、指定したドメインを任意のドメインに変更します。",
   "scripts": {
     "dev": "vite",
@@ -9,21 +9,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "next": "^16.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
   },
   "devDependencies": {
-    "sharp": "^0.33.5",
-    "@types/chrome": "^0.0.270",
-    "@types/node": "^22.10.2",
-    "@types/react": "^19.0.4",
-    "@types/react-dom": "^19.0.2",
-    "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.2",
-    "vite": "^6.0.5"
+    "@tailwindcss/vite": "^4.3.2",
+    "@types/chrome": "^0.2.2",
+    "@types/node": "^26.1.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "sharp": "^0.35.3",
+    "tailwindcss": "^4.3.2",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.3"
   }
 }
