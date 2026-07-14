@@ -1,3 +1,8 @@
+## 開発手順
+
+1.`npm run build`でdistにフォルダを再生成
+2.distフォルダをchrome上で読み込み問題なければzip化して審査に送る
+
 ## インストール
 
 1. `chrome://extensions/` を開く

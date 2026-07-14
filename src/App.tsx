@@ -1,45 +1,94 @@
-import React, { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLanguage } from "./i18n/LanguageContext";
 import LanguageSwitcher from "./components/LanguageSwitcher";
 
 type BookmarkNode = chrome.bookmarks.BookmarkTreeNode;
 
+const formatPreviewUrl = (u: string) => {
+  try {
+    const parsed = new URL(u);
+    let s =
+      parsed.hostname +
+      (parsed.pathname && parsed.pathname !== "/" ? parsed.pathname : "");
+    if (parsed.search) s += parsed.search;
+    s = s.replace(/\/$/, "");
+    if (s.length > 50) return s.slice(0, 47) + "...";
+    return s;
+  } catch (_) {
+    return u.length > 50 ? u.slice(0, 47) + "..." : u;
+  }
+};
+
+// React.memo でリスト部分を分離し、入力欄のキーストロークごとの全件再レンダーを防ぐ
+const BookmarkList = React.memo(({ items }: { items: BookmarkNode[] }) => (
+  <ul className="list-decimal pl-5">
+    {items.map((b) => (
+      <li
+        key={b.id}
+        className="mb-2 leading-tight py-1 px-2 rounded hover:bg-gray-100"
+      >
+        <a
+          href={b.url}
+          target="_blank"
+          rel="noreferrer"
+          className="text-blue-600 block hover:underline"
+          title={b.url}
+        >
+          <div className="flex flex-col">
+            <span className="font-medium text-sm text-gray-800">
+              {b.title || formatPreviewUrl(b.url!)}
+            </span>
+            {b.title && (
+              <span className="text-xs text-gray-500">
+                {formatPreviewUrl(b.url!)}
+              </span>
+            )}
+          </div>
+        </a>
+      </li>
+    ))}
+  </ul>
+));
+
+const fetchBookmarks = async (): Promise<BookmarkNode[]> => {
+  const nodes = await new Promise<BookmarkNode[]>((resolve) =>
+    chrome.bookmarks.getTree((tree) => resolve(tree))
+  );
+  const list: BookmarkNode[] = [];
+  const walk = (nodes: BookmarkNode[]) => {
+    for (const n of nodes) {
+      if (n.url) list.push(n);
+      if (n.children) walk(n.children as BookmarkNode[]);
+    }
+  };
+  walk(nodes);
+  return list;
+};
+
 const App: React.FC = () => {
   const { t } = useLanguage();
-  const [bookmarks, setBookmarks] = useState<BookmarkNode[]>([]);
-  const [loading, setLoading] = useState(false);
   const [fromDomain, setFromDomain] = useState("");
   const [toDomain, setToDomain] = useState("");
   const [preview, setPreview] = useState<BookmarkNode[]>([]);
   const [onlyChanged, setOnlyChanged] = useState(false);
   const [mode, setMode] = useState<"exact" | "wildcard" | "regexp">("exact");
 
-  useEffect(() => {
-    // no-op
-  }, []);
+  const bookmarksQuery = useQuery({
+    queryKey: ["bookmarks"],
+    queryFn: fetchBookmarks,
+    enabled: false, // ボタン押下時のみ読み込む（従来挙動を維持）
+  });
+  const bookmarks = bookmarksQuery.data ?? [];
 
   const loadBookmarks = async () => {
-    setLoading(true);
-    try {
-      const nodes = await new Promise<BookmarkNode[]>((resolve) =>
-        chrome.bookmarks.getTree((tree) => resolve(tree))
-      );
-      const list: BookmarkNode[] = [];
-      const walk = (nodes: BookmarkNode[]) => {
-        for (const n of nodes) {
-          if (n.url) list.push(n);
-          if (n.children) walk(n.children as BookmarkNode[]);
-        }
-      };
-      walk(nodes);
-      setBookmarks(list);
-      setPreview(list);
-    } catch (e) {
-      console.error(e);
+    const { data, error } = await bookmarksQuery.refetch();
+    if (error) {
+      console.error(error);
       alert(t.bookmarkLoadError);
-    } finally {
-      setLoading(false);
+      return;
     }
+    setPreview(data ?? []);
   };
 
   const buildPreview = () => {
@@ -66,14 +115,8 @@ const App: React.FC = () => {
     }
   };
 
-  const applyReplace = async () => {
-    if (!fromDomain || !toDomain) {
-      alert(t.domainRequired);
-      return;
-    }
-    if (!confirm(t.confirmReplace)) return;
-    setLoading(true);
-    try {
+  const replaceMutation = useMutation({
+    mutationFn: async () => {
       const from = fromDomain.replace(/^https?:\/\//, "").replace(/\/$/, "");
       const to = toDomain.replace(/^https?:\/\//, "").replace(/\/$/, "");
       const response = await new Promise<any>((resolve) =>
@@ -83,42 +126,49 @@ const App: React.FC = () => {
         )
       );
       if (!response?.ok) throw new Error(response?.error || "unknown");
-      const diffs = response.result || [];
+      return (response.result || []) as unknown[];
+    },
+    onSuccess: async (diffs) => {
       alert(`${t.replaceComplete} ${t.changeCount}: ${diffs.length}`);
+      // refetch で最新のブックマークを取得し直す
       await loadBookmarks();
-    } catch (e) {
+    },
+    onError: (e) => {
       console.error(e);
       alert(t.replaceError);
-    } finally {
-      setLoading(false);
+    },
+  });
+
+  const loading = bookmarksQuery.isFetching || replaceMutation.isPending;
+
+  const applyReplace = () => {
+    if (!fromDomain || !toDomain) {
+      alert(t.domainRequired);
+      return;
     }
+    if (!confirm(t.confirmReplace)) return;
+    replaceMutation.mutate();
   };
 
   // exportDiffs removed: feature disabled to limit permissions
 
-  const formatPreviewUrl = (u: string) => {
-    try {
-      const parsed = new URL(u);
-      let s =
-        parsed.hostname +
-        (parsed.pathname && parsed.pathname !== "/" ? parsed.pathname : "");
-      if (parsed.search) s += parsed.search;
-      s = s.replace(/\/$/, "");
-      if (s.length > 50) return s.slice(0, 47) + "...";
-      return s;
-    } catch (_) {
-      return u.length > 50 ? u.slice(0, 47) + "..." : u;
-    }
-  };
+  // id -> 元URL のマップ（O(n²) だった find の置き換え）
+  const originalUrlById = useMemo(
+    () => new Map(bookmarks.map((b) => [b.id, b.url || ""])),
+    [bookmarks]
+  );
 
   // displayedPreview: when `onlyChanged` is true, show only items whose preview URL differs from the original loaded bookmarks
-  const displayedPreview = preview.filter((b) => {
-    if (!onlyChanged) return true;
-    const orig = bookmarks.find((x) => x.id === b.id);
-    // if original not found, keep it (safe fallback)
-    if (!orig) return true;
-    return (orig.url || "") !== (b.url || "");
-  });
+  // useMemo で参照を安定させ、入力欄のキーストロークごとの再計算・リスト再レンダーを防ぐ
+  const displayedPreview = useMemo(() => {
+    if (!onlyChanged) return preview;
+    return preview.filter((b) => {
+      const orig = originalUrlById.get(b.id);
+      // if original not found, keep it (safe fallback)
+      if (orig === undefined) return true;
+      return orig !== (b.url || "");
+    });
+  }, [preview, onlyChanged, originalUrlById]);
 
   return (
     <div className="w-[520px] h-[560px] p-4 bg-white text-sm overflow-auto">
@@ -192,33 +242,7 @@ const App: React.FC = () => {
         {preview.length === 0 ? (
           <div className="text-gray-500">{t.notLoaded}</div>
         ) : (
-          <ul className="list-decimal pl-5">
-            {displayedPreview.map((b) => (
-              <li
-                key={b.id}
-                className="mb-2 leading-tight py-1 px-2 rounded hover:bg-gray-100"
-              >
-                <a
-                  href={b.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-600 block hover:underline"
-                  title={b.url}
-                >
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm text-gray-800">
-                      {b.title || formatPreviewUrl(b.url!)}
-                    </span>
-                    {b.title && (
-                      <span className="text-xs text-gray-500">
-                        {formatPreviewUrl(b.url!)}
-                      </span>
-                    )}
-                  </div>
-                </a>
-              </li>
-            ))}
-          </ul>
+          <BookmarkList items={displayedPreview} />
         )}
       </div>
     </div>

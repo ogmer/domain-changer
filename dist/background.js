@@ -22,22 +22,41 @@ async function performReplace(from, to, mode = "exact") {
   };
   walk(nodes);
 
-  const diffs = [];
   const matchFn = buildMatcher(from, mode);
 
+  // まず対象を洗い出す
+  const targets = [];
   for (const b of list) {
     try {
       const url = new URL(b.url);
       if (matchFn(url.hostname)) {
-        const newUrl = b.url.replace(url.hostname, to);
-        await new Promise((resolve) =>
-          chrome.bookmarks.update(b.id, { url: newUrl }, resolve)
-        );
-        diffs.push({ id: b.id, title: b.title, oldUrl: b.url, newUrl });
+        targets.push({ b, newUrl: b.url.replace(url.hostname, to) });
       }
     } catch (e) {
       // ignore
     }
+  }
+
+  // 1件ずつ直列に await すると件数が多いとき非常に遅いため、チャンク単位で並列更新する
+  const diffs = [];
+  const CHUNK_SIZE = 50;
+  for (let i = 0; i < targets.length; i += CHUNK_SIZE) {
+    const chunk = targets.slice(i, i + CHUNK_SIZE);
+    await Promise.all(
+      chunk.map(async ({ b, newUrl }) => {
+        try {
+          await new Promise((resolve, reject) =>
+            chrome.bookmarks.update(b.id, { url: newUrl }, () => {
+              if (chrome.runtime.lastError) reject(chrome.runtime.lastError);
+              else resolve();
+            })
+          );
+          diffs.push({ id: b.id, title: b.title, oldUrl: b.url, newUrl });
+        } catch (e) {
+          // ignore
+        }
+      })
+    );
   }
 
   return diffs;
