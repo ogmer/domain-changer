@@ -1,6 +1,6 @@
 {
   "name": "Domain Changer - ドメイン置換くん",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "description": "ブックマークを読み込み、指定したドメインを任意のドメインに変更します。",
   "scripts": {
     "dev": "vite",
